@@ -3,4 +3,3 @@ signer.eif
 *.tar
 image.oci.tar
 image.docker.tar
-/signer
