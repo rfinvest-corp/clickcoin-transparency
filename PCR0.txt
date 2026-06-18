@@ -1,0 +1,4 @@
+# kcoin signer enclave — PCR0 공시 기록 (release당 1행, append-only)
+# 검증: make build-eif 후 PCR0가 아래 값과 일치해야 함. KMS 정책/투명성 채널과 byte-match.
+# date(UTC)              git       eif_sha256                                                        pcr0(SHA384)
+2026-06-09T13:50:02Z  24c448e  1d55c4c9e32793926ea1847ccc6611050a864671a470594b04de015695eb089f  81346d7cca20b5e591bcff9e16848b6540252f9b693d28addba1f9679d38a2393d465e38c835d9e336711fc2726a6935
