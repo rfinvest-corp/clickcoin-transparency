@@ -1,0 +1,6 @@
+# 빌드 산출물 (재현 빌드로 생성, 커밋하지 않음)
+signer.eif
+*.tar
+image.oci.tar
+image.docker.tar
+/signer

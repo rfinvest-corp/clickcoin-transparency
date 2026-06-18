@@ -1,0 +1,38 @@
+# signer enclave 재현 빌드 핀고정 매니페스트 (T4.8)
+# 아래 핀이 전부 동일해야 PCR0가 재현된다. __FILL__ 값은 빌드 호스트에서 캡처해 채운다.
+# 변경 시: 해당 행 갱신 + reproduce.sh 더블빌드로 expected_pcr0 재산출 + PCR0.txt 새 행 + 공시.
+
+[target]
+arch                 = arm64                       # prod c7g.large Graviton 고정 (변경 금지)
+os                   = AmazonLinux2023
+
+[toolchain]
+# golang base는 arm64 manifest digest로 고정. 해석:
+#   docker buildx imagetools inspect golang:1.25 --format '{{json .Manifest.manifests}}'  → linux/arm64 digest
+golang_base          = golang:1.25@sha256:188c07d275836f297fe211d98ecd2d7f252501000c5b3d0e601d6392748c593b
+go_toolchain         = 1.25.x  (GOTOOLCHAIN=local — base 이미지의 go 버전 고정)
+# BuildKit도 이미지에 영향(레이어 직렬화). docker-container 드라이버가 쓰는 moby/buildkit를 digest로 고정:
+#   docker buildx inspect kcoin-repro | grep -i 'buildkit version'  +  docker image inspect moby/buildkit:buildx-stable-1 --format '{{index .RepoDigests 0}}'
+buildkit_image       = moby/buildkit:buildx-stable-1@sha256:0168606be2315b7c807a03b3d8aa79beefdb31c98740cebdffdfeebf31190c9f
+
+# nitro-cli/커널 blobs = PCR0 최대 변수. 호스트에서 캡처:
+#   nitro-cli --version
+#   rpm -q aws-nitro-enclaves-cli aws-nitro-enclaves-cli-devel
+#   sha256sum /usr/share/nitro_enclaves/blobs/* | sort
+nitro_cli_version    = 1.4.4                     # 예: 1.3.4
+nitro_cli_pkg        = aws-nitro-enclaves-cli-1.4.4-0.amzn2023 , -devel-1.4.4-0.amzn2023   # 예: 1.3.4-0.amzn2023
+kernel_blobs_sha256  = ed6570298f578bcfc5ceede287a386a4a988c76626297a27080fdf5e74918e8c                     # blobs/* 정렬 후 해시 묶음
+
+[build]
+go_build_flags       = -trimpath -buildvcs=false -ldflags "-s -w -buildid="
+go_env               = CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local GOFLAGS=-mod=readonly
+image_build          = docker-container 드라이버(최신 BuildKit) + SOURCE_DATE_EPOCH + rewrite-timestamp → docker load (reproduce.sh)
+# SDE는 git이 아니라 이 고정 상수를 쓴다 → repo/히스토리 무관(transparency repo 등 어디서든 동일 PCR0).
+# 값 = 빌드 입력(enclave.Dockerfile 핀 커밋 59145ec) 시각. 빌드 입력이 바뀌면 이 값 갱신 + PCR0 재산출.
+source_date_epoch    = 1781789139
+
+[result]
+# reproduce.sh를 두 독립 환경에서 돌려 PCR0가 일치(더블빌드)한 뒤 확정해 기입한다.
+expected_pcr0        = 2311b32a05efa0ed8541f981ca722f7dac3185e569a886f221fe622290e0dfef1b7ccdfc9c042f7ebd931a8cc263a778   # 96 hex (SHA-384)
+built_from_commit    = 3aa9e56                      # git short SHA
+verified_double_build = yes                           # 두 환경 일치 확인 시 yes

@@ -16,15 +16,23 @@ PCR0 = Nitro Enclave 이미지(EIF)의 SHA-384 측정값. 운영 중인 서명 e
 - KMS는 PCR0 일치 enclave에만 복호화를 허용 → 다른 코드는 사용자 키를 복호화할 수 없음.
 - 각 기록은 AWS S3 Object Lock(Compliance, 10년)으로도 불변 보관됩니다.
 
-## 검증
+## 검증 (self-verify)
 
-지금 공개되는 것은 **PCR0 값(정본)** 입니다. 이 값은 AWS KMS 정책 조건과 대조해 확인할 수 있습니다.
+signer enclave **소스 전체 + 재현 빌드 키트**를 [`signer-enclave/`](./signer-enclave/)에 공개합니다.
+누구나 그 소스를 핀고정 toolchain으로 재현 빌드해 산출 PCR0가 공시값과 **byte-match**하는지 직접
+확인할 수 있습니다 — 감사인 위임이 아니라 누구든 스스로 검증하는 **trustless** 모델.
 
-운영 enclave가 사용자 키를 빼돌리지 않는다는 점은 **signer enclave 소스 공개 + 재현 빌드**로 검증합니다 —
-누구나 공개된 소스를 동일 toolchain으로 재현 빌드해 산출 PCR0가 위 공시 값과 byte-match하는지 직접
-확인할 수 있습니다. (감사인 위임이 아니라 누구든 스스로 검증하는 trustless 모델)
+```bash
+cd signer-enclave
+NITRO_VER=<BUILD.lock의 nitro_cli_pkg> bash setup-host.sh   # AL2023 arm64 호스트
+make verify-pcr0                                            # 재현 빌드 PCR0 == 공시값?
+```
 
-> enclave 소스 공개 + 재현 빌드 구축은 후속 단계입니다. 현 단계 공시는 PCR0 정본 기록 + 불변 보관까지입니다.
+자세한 절차·핀은 [`signer-enclave/README.md`](./signer-enclave/README.md). 측정되는 enclave(TCB) 외의
+부모 서비스·플랫폼·시크릿은 포함하지 않습니다(PCR0 무관).
+
+- 운영 enclave의 PCR0 = 공시값 → 코드가 공시된 그대로.
+- KMS는 그 PCR0 enclave에만 복호화 허용 → 다른 코드는 사용자 키 복호화 불가.
 
 ## 릴리스
 
