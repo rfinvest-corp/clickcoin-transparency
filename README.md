@@ -10,6 +10,13 @@ enclave에만** 복호화를 허용하도록 못박혀 있습니다. 이 저장�
 PCR0 = Nitro Enclave 이미지(EIF)의 SHA-384 측정값. 운영 중인 서명 enclave의 코드를 고정합니다.
 현재 공시 값은 [`PCR0.txt`](./PCR0.txt)(release당 1행, append-only) 참조.
 
+**현재 강제값 (2026-09-09 ~)** — KMS 키 정책이 아래 PCR0를 가진 enclave에만 복호화를 허용합니다.
+`PCR0.txt`의 **마지막 행**이 현재 값이고, 이전 행(`81346d…`, 2026-06-09)은 폐기되어 더 이상 복호화할 수 없습니다.
+
+```
+2311b32a05efa0ed8541f981ca722f7dac3185e569a886f221fe622290e0dfef1b7ccdfc9c042f7ebd931a8cc263a778
+```
+
 ## 무엇을 보장하나
 
 - 운영 enclave의 PCR0가 공시 값과 같다 → 코드가 바뀌지 않았음.
@@ -37,3 +44,8 @@ make verify-pcr0                                            # 재현 빌드 PCR0
 ## 릴리스
 
 각 PCR0 공시는 GitHub release로도 태깅됩니다. [Releases](../../releases) 참조.
+
+## 라이선스
+
+이 저장소의 소스와 빌드 키트는 [Apache License 2.0](./LICENSE)으로 공개합니다.
+Copyright 2026 ClickCoin (rfinvest-corp).
